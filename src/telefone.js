@@ -2,277 +2,217 @@ import { Router } from "express";
 import autenticarToken from "./autenticacao.js";
 
 export default function Telefone(app, db) {
-  const router = Router();
+  const routes = Router();
 
-  router.get(
-    "/ListaTelefones",
-    autenticarToken,
-    async (req, res) => {
-      try {
-        const sql = `
-          SELECT
-            idTelefone,
-            Telefone,
-            DDD,
-            idTipoTelefone,
-            idPessoa
-          FROM Telefone
-          ORDER BY idTelefone
-        `;
+  routes.get("/ListaTelefones", autenticarToken, async (req, res) => {
+    try {
+      const [telefones] = await db.query(`
+        SELECT idTelefone, Telefone, DDD, idTipoTelefone, idPessoa
+        FROM Telefone
+        ORDER BY idTelefone
+      `);
 
-        const [rows] = await db.query(sql);
+      return res.status(200).json(telefones);
+    } catch (err) {
+      console.error("Erro ao buscar telefones:", err);
 
-        res.status(200).json(rows);
-
-      } catch (error) {
-        console.error(error);
-
-        res.status(500).json({
-          erro: "Erro ao consultar telefones",
-        });
-      }
+      return res.status(500).json({
+        erro: "Erro ao consultar telefones",
+      });
     }
-  );
+  });
 
-  router.get(
-    "/ListaTelefones/:idPessoa",
-    autenticarToken,
-    async (req, res) => {
-      try {
-        const { idPessoa } = req.params;
+  routes.get("/ListaTelefones/:idPessoa", autenticarToken, async (req, res) => {
+    try {
+      const pessoaId = req.params.idPessoa;
 
-        const sql = `
-          SELECT
-            idTelefone,
-            Telefone,
-            DDD,
-            idTipoTelefone,
-            idPessoa
+      const [telefones] = await db.query(
+        `
+          SELECT idTelefone, Telefone, DDD, idTipoTelefone, idPessoa
           FROM Telefone
           WHERE idPessoa = ?
           ORDER BY idTelefone
-        `;
+        `,
+        [pessoaId]
+      );
 
-        const [rows] = await db.query(sql, [idPessoa]);
+      return res.status(200).json(telefones);
+    } catch (err) {
+      console.error("Erro ao buscar telefones da pessoa:", err);
 
-        res.status(200).json(rows);
-
-      } catch (error) {
-        console.error(error);
-
-        res.status(500).json({
-          erro: "Erro ao consultar telefones da pessoa",
-        });
-      }
+      return res.status(500).json({
+        erro: "Erro ao consultar telefones da pessoa",
+      });
     }
-  );
+  });
 
-  router.get(
-    "/Telefone/:idTelefone",
-    autenticarToken,
-    async (req, res) => {
-      try {
-        const { idTelefone } = req.params;
+  routes.get("/Telefone/:idTelefone", autenticarToken, async (req, res) => {
+    try {
+      const telefoneId = req.params.idTelefone;
 
-        const sql = `
-          SELECT
-            idTelefone,
-            Telefone,
-            DDD,
-            idTipoTelefone,
-            idPessoa
+      const [resultado] = await db.query(
+        `
+          SELECT idTelefone, Telefone, DDD, idTipoTelefone, idPessoa
           FROM Telefone
           WHERE idTelefone = ?
-        `;
+        `,
+        [telefoneId]
+      );
 
-        const [rows] = await db.query(sql, [idTelefone]);
-
-        if (rows.length === 0) {
-          return res.status(404).json({
-            erro: "Telefone não encontrado",
-          });
-        }
-
-        res.status(200).json(rows[0]);
-
-      } catch (error) {
-        console.error(error);
-
-        res.status(500).json({
-          erro: "Erro ao consultar telefone",
+      if (!resultado.length) {
+        return res.status(404).json({
+          erro: "Telefone não encontrado",
         });
       }
+
+      return res.status(200).json(resultado[0]);
+    } catch (err) {
+      console.error("Erro ao buscar telefone:", err);
+
+      return res.status(500).json({
+        erro: "Erro ao consultar telefone",
+      });
     }
-  );
+  });
 
-  router.post(
-    "/IncluirTelefone",
-    autenticarToken,
-    async (req, res) => {
-      try {
-        const {
-          Telefone,
-          DDD,
-          idTipoTelefone,
-          idPessoa
-        } = req.body;
+  routes.post("/IncluirTelefone", autenticarToken, async (req, res) => {
+    try {
+      const dados = req.body;
 
-        if (
-          !Telefone ||
-          !DDD ||
-          !idTipoTelefone ||
-          !idPessoa
-        ) {
-          return res.status(400).json({
-            erro: "Telefone, DDD, idTipoTelefone e idPessoa são obrigatórios",
-          });
-        }
+      if (
+        !dados.Telefone ||
+        !dados.DDD ||
+        !dados.idTipoTelefone ||
+        !dados.idPessoa
+      ) {
+        return res.status(400).json({
+          erro: "Telefone, DDD, idTipoTelefone e idPessoa são obrigatórios",
+        });
+      }
 
-        const sql = `
-          INSERT INTO Telefone
-          (
+      const [resultado] = await db.query(
+        `
+          INSERT INTO Telefone (
             Telefone,
             DDD,
             idTipoTelefone,
             idPessoa
           )
           VALUES (?, ?, ?, ?)
-        `;
+        `,
+        [
+          dados.Telefone,
+          dados.DDD,
+          dados.idTipoTelefone,
+          dados.idPessoa,
+        ]
+      );
 
-        const [result] = await db.query(sql, [
-          Telefone,
-          DDD,
-          idTipoTelefone,
-          idPessoa,
-        ]);
+      return res.status(201).json({
+        mensagem: "Telefone cadastrado com sucesso",
+        idTelefone: resultado.insertId,
+      });
+    } catch (err) {
+      console.error("Erro ao cadastrar telefone:", err);
 
-        res.status(201).json({
-          mensagem: "Telefone cadastrado com sucesso",
-          idTelefone: result.insertId,
-        });
-
-      } catch (error) {
-        console.error(error);
-
-        res.status(500).json({
-          erro: "Erro ao incluir telefone no banco de dados",
-        });
-      }
+      return res.status(500).json({
+        erro: "Erro ao incluir telefone no banco de dados",
+      });
     }
-  );
+  });
 
-  router.put(
+  routes.put(
     "/AlterarTelefone/:idTelefone",
     autenticarToken,
     async (req, res) => {
       try {
-        const { idTelefone } = req.params;
+        const telefoneId = req.params.idTelefone;
+        const dados = req.body;
 
-        const {
-          Telefone,
-          DDD,
-          idTipoTelefone,
-          idPessoa
-        } = req.body;
+        const alteracoes = [];
+        const parametros = [];
 
-        const campos = [];
-        const valores = [];
+        const atualizar = (campo, valor) => {
+          if (valor !== undefined) {
+            alteracoes.push(`${campo} = ?`);
+            parametros.push(valor);
+          }
+        };
 
-        if (Telefone !== undefined) {
-          campos.push("Telefone = ?");
-          valores.push(Telefone);
-        }
+        atualizar("Telefone", dados.Telefone);
+        atualizar("DDD", dados.DDD);
+        atualizar("idTipoTelefone", dados.idTipoTelefone);
+        atualizar("idPessoa", dados.idPessoa);
 
-        if (DDD !== undefined) {
-          campos.push("DDD = ?");
-          valores.push(DDD);
-        }
-
-        if (idTipoTelefone !== undefined) {
-          campos.push("idTipoTelefone = ?");
-          valores.push(idTipoTelefone);
-        }
-
-        if (idPessoa !== undefined) {
-          campos.push("idPessoa = ?");
-          valores.push(idPessoa);
-        }
-
-        if (campos.length === 0) {
+        if (!alteracoes.length) {
           return res.status(400).json({
             erro: "Nenhum campo informado para atualização",
           });
         }
 
-        const sql = `
-          UPDATE Telefone
-          SET ${campos.join(", ")}
-          WHERE idTelefone = ?
-        `;
+        parametros.push(telefoneId);
 
-        valores.push(idTelefone);
-
-        const [result] = await db.query(
-          sql,
-          valores
+        const [resultado] = await db.query(
+          `
+            UPDATE Telefone
+            SET ${alteracoes.join(", ")}
+            WHERE idTelefone = ?
+          `,
+          parametros
         );
 
-        if (result.affectedRows === 0) {
+        if (!resultado.affectedRows) {
           return res.status(404).json({
             erro: "Telefone não encontrado",
           });
         }
 
-        res.status(200).json({
+        return res.status(200).json({
           mensagem: "Telefone atualizado com sucesso",
         });
+      } catch (err) {
+        console.error("Erro ao alterar telefone:", err);
 
-      } catch (error) {
-        console.error(error);
-
-        res.status(500).json({
+        return res.status(500).json({
           erro: "Erro ao atualizar telefone",
         });
       }
     }
   );
 
-  router.delete(
+  routes.delete(
     "/ExcluirTelefone/:idTelefone",
     autenticarToken,
     async (req, res) => {
       try {
-        const { idTelefone } = req.params;
+        const telefoneId = req.params.idTelefone;
 
-        const sql = `
-          DELETE FROM Telefone
-          WHERE idTelefone = ?
-        `;
-
-        const [result] = await db.query(
-          sql,
-          [idTelefone]
+        const [resultado] = await db.query(
+          `
+            DELETE FROM Telefone
+            WHERE idTelefone = ?
+          `,
+          [telefoneId]
         );
 
-        if (result.affectedRows === 0) {
+        if (!resultado.affectedRows) {
           return res.status(404).json({
             erro: "Telefone não encontrado",
           });
         }
 
-        res.status(200).json({
+        return res.status(200).json({
           mensagem: "Telefone excluído com sucesso",
         });
+      } catch (err) {
+        console.error("Erro ao excluir telefone:", err);
 
-      } catch (error) {
-        console.error(error);
-
-        res.status(500).json({
+        return res.status(500).json({
           erro: "Erro ao excluir telefone",
         });
       }
     }
   );
 
-  app.use("/", router);
+  app.use("/", routes);
 }
