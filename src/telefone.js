@@ -10,7 +10,6 @@ export default function Telefone(app, db) {
                 SELECT
                     idTelefone,
                     Telefone,
-                    DDD,
                     idTipoTelefone,
                     idPessoa
                 FROM Telefone
@@ -37,7 +36,6 @@ export default function Telefone(app, db) {
                 SELECT
                     idTelefone,
                     Telefone,
-                    DDD,
                     idTipoTelefone,
                     idPessoa
                 FROM Telefone
@@ -65,7 +63,6 @@ export default function Telefone(app, db) {
                 SELECT
                     idTelefone,
                     Telefone,
-                    DDD,
                     idTipoTelefone,
                     idPessoa
                 FROM Telefone
@@ -92,28 +89,26 @@ export default function Telefone(app, db) {
 
   router.post("/IncluirTelefone", autenticarToken, async (req, res) => {
     try {
-      const { Telefone, DDD, idTipoTelefone, idPessoa } = req.body;
+      const { Telefone, idTipoTelefone, idPessoa } = req.body;
 
-      if (!Telefone || !DDD || !idTipoTelefone || !idPessoa) {
-        return res.status(400).json({
-          erro: "Telefone, DDD, idTipoTelefone e idPessoa são obrigatórios",
-        });
-      }
+if (!Telefone || !idTipoTelefone || !idPessoa) {
+  return res.status(400).json({
+    erro: "Telefone, idTipoTelefone e idPessoa são obrigatórios",
+  });
+}
 
       const sql = `
                 INSERT INTO Telefone
                 (
                     Telefone,
-                    DDD,
                     idTipoTelefone,
                     idPessoa
                 )
-                VALUES (?, ?, ?, ?)
+                VALUES (?, ?, ?)
             `;
 
       const [result] = await db.query(sql, [
         Telefone,
-        DDD,
         idTipoTelefone,
         idPessoa,
       ]);
@@ -138,7 +133,7 @@ export default function Telefone(app, db) {
       try {
         const { idTelefone } = req.params;
 
-        const { Telefone, DDD, idTipoTelefone, idPessoa } = req.body;
+        const { Telefone, idTipoTelefone, idPessoa } = req.body;
 
         const campos = [];
         const valores = [];
@@ -146,11 +141,6 @@ export default function Telefone(app, db) {
         if (Telefone !== undefined) {
           campos.push("Telefone = ?");
           valores.push(Telefone);
-        }
-
-        if (DDD !== undefined) {
-          campos.push("DDD = ?");
-          valores.push(DDD);
         }
 
         if (idTipoTelefone !== undefined) {
