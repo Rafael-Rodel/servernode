@@ -7,7 +7,7 @@ import swaggerUi from 'swagger-ui-express';
 import jwt from "jsonwebtoken";
 import cors from 'cors';
 
-
+import Telefone from './telefone.js';
 import Login from "./login.js";
 import ConfigurarListaPessoas from "./pessoa.js"
 import Chat from "./chat.js";
@@ -71,6 +71,7 @@ Login(app);
 ConfigurarListaPessoas(app,db);
 Chat(app);
 Endereco(app, db);
+Telefone(app, db);
 
 /**
  * @openapi
