@@ -4,7 +4,6 @@ import autenticarToken from "./autenticacao.js";
 export default function Telefone(app, db) {
   const router = Router();
 
-  // LISTAR TODOS OS TELEFONES
   router.get("/ListaTelefones", autenticarToken, async (req, res) => {
     try {
       const sql = `
@@ -30,7 +29,6 @@ export default function Telefone(app, db) {
     }
   });
 
-  // LISTAR TELEFONES DE UMA PESSOA
   router.get("/ListaTelefones/:idPessoa", autenticarToken, async (req, res) => {
     try {
       const { idPessoa } = req.params;
@@ -59,7 +57,6 @@ export default function Telefone(app, db) {
     }
   });
 
-  // BUSCAR TELEFONE POR ID
   router.get("/Telefone/:idTelefone", autenticarToken, async (req, res) => {
     try {
       const { idTelefone } = req.params;
@@ -93,7 +90,6 @@ export default function Telefone(app, db) {
     }
   });
 
-  // INCLUIR TELEFONE
   router.post("/IncluirTelefone", autenticarToken, async (req, res) => {
     try {
       const { Telefone, DDD, idTipoTelefone, idPessoa } = req.body;
@@ -135,7 +131,6 @@ export default function Telefone(app, db) {
     }
   });
 
-  // ALTERAR TELEFONE
   router.put(
     "/AlterarTelefone/:idTelefone",
     autenticarToken,
@@ -203,7 +198,6 @@ export default function Telefone(app, db) {
     },
   );
 
-  // EXCLUIR TELEFONE
   router.delete(
     "/ExcluirTelefone/:idTelefone",
     autenticarToken,
